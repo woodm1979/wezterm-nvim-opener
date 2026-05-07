@@ -1,0 +1,2 @@
+#!/bin/bash
+exec /usr/local/bin/wezterm cli spawn --new-window -- /opt/homebrew/bin/nvim "$1"

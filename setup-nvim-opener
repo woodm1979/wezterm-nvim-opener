@@ -1,0 +1,37 @@
+#!/bin/bash
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+RUNTIME="$SCRIPT_DIR/wezterm-nvim-open"
+APP="$HOME/Applications/NvimOpen.app"
+BUNDLE_ID="com.woodnt.nvimopen"
+
+cat > /tmp/nvimopen.applescript <<'APPLESCRIPT'
+on open theFiles
+    repeat with aFile in theFiles
+        set filePath to POSIX path of aFile
+        do shell script "/Users/woodnt/Code/bin/wezterm-nvim-open " & quoted form of filePath & " &"
+    end repeat
+end open
+APPLESCRIPT
+
+osacompile -o "$APP" /tmp/nvimopen.applescript
+rm /tmp/nvimopen.applescript
+
+/usr/libexec/PlistBuddy -c "Add :CFBundleIdentifier string $BUNDLE_ID" "$APP/Contents/Info.plist" 2>/dev/null || \
+/usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $BUNDLE_ID" "$APP/Contents/Info.plist"
+
+/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister -f "$APP"
+
+if ! command -v duti &>/dev/null; then
+    brew install duti
+fi
+
+duti -s "$BUNDLE_ID" public.plain-text all
+duti -s "$BUNDLE_ID" public.source-code all
+duti -s "$BUNDLE_ID" net.daringfireball.markdown all
+duti -s "$BUNDLE_ID" public.python-script all
+duti -s "$BUNDLE_ID" public.shell-script all
+duti -s "$BUNDLE_ID" public.json all
+
+echo "Done. NvimOpen.app installed at $APP"
