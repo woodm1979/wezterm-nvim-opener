@@ -2,5 +2,11 @@
 if /usr/local/bin/wezterm cli list > /dev/null 2>&1; then
     exec /usr/local/bin/wezterm cli spawn --new-window -- /opt/homebrew/bin/nvim "$1"
 else
-    exec /usr/local/bin/wezterm start -- /opt/homebrew/bin/nvim "$1"
+    /usr/local/bin/wezterm start &
+    until /usr/local/bin/wezterm cli list > /dev/null 2>&1; do
+        sleep 0.1
+    done
+    PANE=$(/usr/local/bin/wezterm cli list --format json | jq -r '.[0].pane_id')
+    /usr/local/bin/wezterm cli spawn --pane-id "$PANE" -- /opt/homebrew/bin/nvim "$1"
+    /usr/local/bin/wezterm cli kill-pane --pane-id "$PANE"
 fi
