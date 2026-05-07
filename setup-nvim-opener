@@ -25,6 +25,10 @@ osacompile -o "$APP" "$TMPSCRIPT"
 
 /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister -f "$APP"
 
+if ! command -v jq &>/dev/null; then
+    brew install jq
+fi
+
 if ! command -v duti &>/dev/null; then
     brew install duti
 fi

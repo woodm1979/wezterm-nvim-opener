@@ -1,13 +1,16 @@
 #!/bin/bash
-WEZTERM=/usr/local/bin/wezterm
-NVIM=/opt/homebrew/bin/nvim
+export PATH="/usr/local/bin:/opt/homebrew/bin:$PATH"
+WEZTERM=$(command -v wezterm) || { echo "wezterm not found" >&2; exit 1; }
+NVIM=$(command -v nvim) || { echo "nvim not found" >&2; exit 1; }
 
 if $WEZTERM cli list > /dev/null 2>&1; then
     exec $WEZTERM cli spawn --new-window -- $NVIM "$1"
 else
     $WEZTERM start &
+    DEADLINE=$(( $(date +%s) + 15 ))
     until PANE=$($WEZTERM cli list --format json 2>/dev/null | jq -r '.[0].pane_id // empty'); [ -n "$PANE" ]; do
         sleep 0.1
+        [ "$(date +%s)" -ge "$DEADLINE" ] && { echo "wezterm failed to start" >&2; exit 1; }
     done
     $WEZTERM cli spawn --pane-id "$PANE" -- $NVIM "$1"
     $WEZTERM cli kill-pane --pane-id "$PANE"
