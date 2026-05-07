@@ -6,11 +6,11 @@ RUNTIME="$SCRIPT_DIR/wezterm-nvim-open"
 APP="$HOME/Applications/NvimOpen.app"
 BUNDLE_ID="com.woodnt.nvimopen"
 
-cat > /tmp/nvimopen.applescript <<'APPLESCRIPT'
+cat > /tmp/nvimopen.applescript <<APPLESCRIPT
 on open theFiles
     repeat with aFile in theFiles
         set filePath to POSIX path of aFile
-        do shell script "/Users/woodnt/Code/bin/wezterm-nvim-open " & quoted form of filePath & " &"
+        do shell script "$RUNTIME " & quoted form of filePath & " &"
     end repeat
 end open
 APPLESCRIPT
