@@ -1,12 +1,14 @@
 #!/bin/bash
-if /usr/local/bin/wezterm cli list > /dev/null 2>&1; then
-    exec /usr/local/bin/wezterm cli spawn --new-window -- /opt/homebrew/bin/nvim "$1"
+WEZTERM=/usr/local/bin/wezterm
+NVIM=/opt/homebrew/bin/nvim
+
+if $WEZTERM cli list > /dev/null 2>&1; then
+    exec $WEZTERM cli spawn --new-window -- $NVIM "$1"
 else
-    /usr/local/bin/wezterm start &
-    until /usr/local/bin/wezterm cli list > /dev/null 2>&1; do
+    $WEZTERM start &
+    until PANE=$($WEZTERM cli list --format json 2>/dev/null | jq -r '.[0].pane_id // empty'); [ -n "$PANE" ]; do
         sleep 0.1
     done
-    PANE=$(/usr/local/bin/wezterm cli list --format json | jq -r '.[0].pane_id')
-    /usr/local/bin/wezterm cli spawn --pane-id "$PANE" -- /opt/homebrew/bin/nvim "$1"
-    /usr/local/bin/wezterm cli kill-pane --pane-id "$PANE"
+    $WEZTERM cli spawn --pane-id "$PANE" -- $NVIM "$1"
+    $WEZTERM cli kill-pane --pane-id "$PANE"
 fi
