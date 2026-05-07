@@ -5,7 +5,7 @@ Double-click a text or code file in Finder and have it open in Neovim inside a n
 ## Requirements
 
 - macOS
-- [WezTerm](https://wezfurlong.org/wezterm/) — must be **already running** when you open files (see [Caveats](#caveats))
+- [WezTerm](https://wezfurlong.org/wezterm/)
 - [Neovim](https://neovim.io/)
 - [Homebrew](https://brew.sh/) — used to install `duti` during setup
 
@@ -72,11 +72,16 @@ macOS file associations require a proper `.app` bundle as the handler — a bare
 
 `osacompile` builds a minimal "droplet" app from an AppleScript source file, which is the lightest-weight way to get a working `.app` without Xcode or Automator.
 
-### Why `wezterm cli spawn --new-window` instead of `wezterm start`?
+### `wezterm cli spawn` vs `wezterm start`
 
 `wezterm start -- nvim <file>` has a bug in WezTerm ≤ 20240203: when a WezTerm instance is already running, the CLI hands off to the existing GUI process via a Unix socket, but the GUI ignores the `PROG` argument and opens the default shell instead.
 
-`wezterm cli spawn --new-window -- nvim <file>` uses a different IPC code path that correctly passes the command to the running GUI. It requires WezTerm to be running (see [Caveats](#caveats)).
+`wezterm cli spawn --new-window -- nvim <file>` uses a different IPC code path that correctly passes the command to the running GUI, but requires WezTerm to already be running.
+
+`wezterm-nvim-open` uses `wezterm cli list` to detect whether WezTerm is running, then picks the appropriate command:
+
+- **Running** → `wezterm cli spawn --new-window` (avoids the `start` bug)
+- **Not running** → `wezterm start` (no existing instance to trigger the bug)
 
 ### Execution path on double-click
 
@@ -85,8 +90,10 @@ Finder double-click
   → Apple Event to NvimOpen.app
     → AppleScript "on open" handler
       → do shell script "wezterm-nvim-open <path> &"
-        → wezterm cli spawn --new-window -- nvim <path>
-          → new WezTerm window running nvim
+        → wezterm cli list (check if WezTerm is running)
+          → [running]     wezterm cli spawn --new-window -- nvim <path>
+          → [not running] wezterm start -- nvim <path>
+            → new WezTerm window running nvim
 ```
 
 ## Shell notes
@@ -99,8 +106,6 @@ Both scripts use `#!/bin/bash`. This is intentional:
 - If you want to use **fish** or another shell for the runtime script, change the shebang in `wezterm-nvim-open` — just make sure the `exec` equivalent works in that shell
 
 ## Caveats
-
-**WezTerm must be running.** `wezterm cli spawn` connects to a running WezTerm instance over a Unix socket. If WezTerm isn't open when you double-click a file, the command will fail silently (the app will bounce in the Dock and nothing will open). The simplest fix is to keep WezTerm in your Login Items.
 
 **Single file per window.** Each double-clicked file gets its own WezTerm window. Selecting multiple files in Finder and opening them will produce multiple windows.
 

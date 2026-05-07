@@ -1,2 +1,6 @@
 #!/bin/bash
-exec /usr/local/bin/wezterm cli spawn --new-window -- /opt/homebrew/bin/nvim "$1"
+if /usr/local/bin/wezterm cli list > /dev/null 2>&1; then
+    exec /usr/local/bin/wezterm cli spawn --new-window -- /opt/homebrew/bin/nvim "$1"
+else
+    exec /usr/local/bin/wezterm start -- /opt/homebrew/bin/nvim "$1"
+fi
